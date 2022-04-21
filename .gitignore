@@ -1,0 +1,4 @@
+upload/
+db.sqlite3
+manage.py
+qrs/
