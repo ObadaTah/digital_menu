@@ -23,9 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('restaurant/', include('restaurants.urls')),
     path('customer/', include('customers.urls')),
-    path('auth/api-token-auth/', views.obtain_auth_token),
-    # path('menu/', include('menu.urls')),
-    # path('tables/', include('table.urls'))
+    path('auth/',include('security.urls')),
+    path('auth/login/', views.obtain_auth_token),
 
 
 

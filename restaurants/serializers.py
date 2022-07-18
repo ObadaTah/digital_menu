@@ -4,6 +4,7 @@ from .models import Restaurant
 
 class RestaurantSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50)
+    photo = serializers.CharField()
     user = serializers.ReadOnlyField(source='user.id')
     
     def create(self, validated_data):

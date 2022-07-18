@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 
 import qrcode
 
+import json
 import os
 import random
 import string
@@ -21,7 +22,7 @@ class Restaurant(models.Model):
     photo = models.CharField(max_length=1000, default='default.png')
     
     def to_dict(self):
-        return {"id":self.pk,"name": self.name, "image_url":"default.png"}
+        return {"restaurant_id":self.pk,"restaurant_name": self.name, "user_id":self.user.id,"image_url":"default.png"}
     def update(self, request):
         for i in request.data.keys():
             if i == 'name':
@@ -37,12 +38,12 @@ class Category(models.Model):
     photo = models.CharField(max_length=1000, default='default.png')
     
     def to_dict(self):
-        return {'id':self.pk, 'name': self.name, 'photo': self.photo}
+        return {'category_id':self.pk, 'category_name': self.name, 'category_photo': self.photo}
     def update(self, request):
         for i in request.data.keys():
-            if i == 'name':
+            if i == 'category_name':
                 self.name = request.data[i]
-            elif i == 'photo':
+            elif i == 'category_photo':
                 file = data_parser_and_saver(request.data[i], tag='category')
                 self.photo = str(file['directory'])
         self.save()
@@ -63,36 +64,25 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
 
     def default_json():
-        return {
-            'S': 0,
-            'sizes': {
-                'xs': {'is_on': 0, 'price': 0},
-                's': {'is_on': 0, 'price': 0},
-                'm': {'is_on': 0, 'price': 0},
-                'l': {'is_on': 0, 'price': 0},
-                'xl': {'is_on': 0, 'price': 0},
-                'xxl': {'is_on': 0, 'price': 0},
-            },
-            'F': 0,
-        }
+        return {}
     def to_dict(self):
-        return {'id':self.pk,'name': self.name, 'description':self.description, 'optionsjson':self.optionsjson,'price': self.price, 'photo': self.photo, 'category':self.category.pk}
+        return {'id':self.pk,'product_name': self.name, 'product_description':self.description, 'optionsjson':self.optionsjson,'product_price': self.price, 'product_photo': self.photo, 'category_id':self.category.pk}
     def update(self, request):
         for i in request.data.keys():
-            if i == 'name':
+            if i == 'product_name':
                 self.name = request.data[i]
-            elif i == 'price':
+            elif i == 'product_price':
                 self.price = request.data[i]
-            elif i == 'description':
+            elif i == 'product_description':
                 self.description = request.data[i]
-            elif i == 'photo':
+            elif i == 'product_photo':
                 file = data_parser_and_saver(request.data[i], tag='product')
                 self.photo = str(file['directory'])
             elif i == 'category_id':
                 restaurant =  Restaurant.objects.filter(user = request.user).first()
                 self.category = get_object_or_404(Category, pk=int(request.data['category_id']), restaurant=restaurant)
             elif i == 'optionsjson':
-                self.optionsjson = request.data[i]
+                self.optionsjson = json.loads(request.data[i])
         self.save()
     optionsjson = models.JSONField(default=default_json)
 

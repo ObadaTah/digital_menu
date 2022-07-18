@@ -1,6 +1,6 @@
 from django.db import models
 from restaurants.models import Restaurant, Product, Table
-
+import json
 # Create your models here.
 
 class Order(models.Model):
@@ -12,9 +12,9 @@ class Order(models.Model):
 
     CHOICES = [
         (0, 'Ordering'),
-        (1,'Ordered'),
+        (1,'Submited'),
         (2,'Opened'),
-        (3,'On The Way'),
+        (3,'Ready'),
         (4,'Received'),
         (5,'Paid'),
     ]
@@ -42,15 +42,15 @@ class Item(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-
+ 
     options = models.CharField(max_length=50, null=True, blank=True)
 
     price = models.DecimalField(max_digits=10000, decimal_places=2, default=0.0)
     def to_dict(self):
-        return {'id':self.pk,'notes':self.notes,'product': self.product, 'options': self.options, 'price': self.price}
+        return {'id':self.pk,'notes':self.notes,'product_id': self.product.id, 'options': self.options, 'price': self.price}
 
     def update(self, request):
-        for i in request.keys():
+        for i in request.data.keys():
             if i == 'notes':
                 self.notes = request.data[i]
             elif i == 'options':

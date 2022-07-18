@@ -44,15 +44,14 @@ def restaurant_view(request):
 # /restaurant/
 # Request Body: Auth, restaurant_id
 def restaurant_detail(request):
-    
-    restaurant = get_object_or_404(Restaurant, pk=request.data['restaurant_id'])
+
+    restaurant = get_object_or_404(Restaurant, user_id=request.user.id)
     
     if request.method == 'GET':
-        serializer = RestaurantSerializer(restaurant)
-        return JsonResponse(serializer.data)
+        return JsonResponse(restaurant.to_dict(), status = 200)
     elif request.method == 'PUT':
         restaurant.update(request)
-        return JsonResponse(restaurant.to_dict())
+        return JsonResponse(restaurant.to_dict(),status=200)
     elif request.method == 'DELETE':
         restaurant.delete()
         return JsonResponse(status=204)
@@ -98,7 +97,7 @@ def category_view(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser])
+@parser_classes([MultiPartParser, JSONParser])
 # restaurant/category/
 # Request Body: Auth, category_id
 def category_detail(request):
@@ -117,6 +116,7 @@ def category_detail(request):
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, JSONParser])
 # restaurant/category/products/
 # Request Body: Auth, category_id
 def category_products(request):
@@ -134,7 +134,7 @@ def category_products(request):
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser])
+@parser_classes([MultiPartParser,JSONParser])
 # restaurant/products/
 # Request Body: GET: Auth
 #               POST: Auth, optionsjson, name, description, price, restaurant_id, category_id  
@@ -150,9 +150,9 @@ def product_view(request):
         data = {}
         try:
             data['optionsjson'] = json.loads(request.data['optionsjson'])
-            data['name'] = request.data['name']
-            data['description'] = request.data['description']
-            data['price'] = request.data['price']
+            data['name'] = request.data['product_name']
+            data['description'] = request.data['product_description']
+            data['price'] = request.data['product_price']
             data['restaurant'] = Restaurant.objects.filter(
                 user=request.user).first()
             data['category'] = get_object_or_404(Category, pk=int(
@@ -160,8 +160,8 @@ def product_view(request):
         except(MultiValueDictKeyError):
             return JsonResponse({'Error': "Some Data Are NOT Provided"})
 
-        if 'photo' in request.data.keys():
-            file = data_parser_and_saver(request.data['photo'], tag='category')
+        if 'product_photo' in request.data.keys():
+            file = data_parser_and_saver(request.data['product_photo'], tag='product')
             data['photo'] = str(file['directory'])
         else:
             data['photo'] = 'default.png'
@@ -187,13 +187,13 @@ def product_detail(request):
         return JsonResponse(product.to_dict())
     elif request.method == 'PUT':
         product.update(request)
-        return JsonResponse(product.to_dict(), safe=False)
+        return JsonResponse(product.to_dict())
     elif request.method == 'DELETE':
         product.delete()
         return JsonResponse({'details': "Deleted Successfully"})
 
 #  Tables///////////////////////////////////////////////////////////////////////
-
+ 
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
